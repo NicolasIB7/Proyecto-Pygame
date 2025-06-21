@@ -1,6 +1,6 @@
 import pygame
 import sys
-from utils.functions_score_menu  import *
+from utils.functions_score_menu import *
 
 # Inicializar pygame
 pygame.init()
@@ -72,12 +72,12 @@ while running:
         mouse_pos = pygame.mouse.get_pos()
         opcion_seleccionada = obtener_opcion(mouse_pos)
         dibujar_menu(opcion_seleccionada)
-        
+
         # sonido
         if bandera_musica_fondo == False:
             pygame.mixer.music.play(-1)
             bandera_musica_fondo = True
-            
+
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 running = False
