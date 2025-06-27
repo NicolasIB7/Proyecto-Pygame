@@ -1,4 +1,7 @@
-def obtener_config_puntajes(pygame, pantalla, ancho: int, alto: int) -> dict:
+import pygame
+
+
+def obtener_config_puntajes(pantalla, ancho: int, alto: int) -> dict:
     fuente_titulo = pygame.font.Font("assets/fonts/fuentemario.ttf", 30)
     fuente_encabezado = pygame.font.Font("assets/fonts/fuentemario.ttf", 22)
     fuente_puntajes = pygame.font.Font("assets/fonts/fuentemario.ttf", 20)
@@ -23,8 +26,36 @@ def obtener_config_puntajes(pygame, pantalla, ancho: int, alto: int) -> dict:
         "color_tercer_puesto": (240, 200, 150),
         "color_encabezado": (180, 220, 255),
         "color_boton_hover": (180, 180, 180),
-        "color_boton_normal": (230, 230, 230)
+        "color_boton_normal": (230, 230, 230),
+        "color_pantalla_puntaje": (107, 140, 255)
     }
+
+
+def ejecutar_pantalla_puntajes(pygame, ventana, config_puntajes, bandera_musica_fondo):
+    ventana.fill(config_puntajes["color_pantalla_puntaje"])
+    generar_texto_inicial(config_puntajes)
+    lista_puntajes = leer_puntajes()
+    generar_tabla_puntajes(lista_puntajes, config_puntajes)
+    rect_boton_volver = generar_boton_volver(config_puntajes)
+
+    bandera_musica_fondo = activar_sonido(bandera_musica_fondo)
+
+    for evento in pygame.event.get():
+        if evento.type == pygame.QUIT:
+            pygame.quit()
+            quit()
+
+        if evento.type == pygame.MOUSEBUTTONDOWN:
+            if rect_boton_volver.collidepoint(evento.pos):
+                if evento.button == 1:
+                    return True, bandera_musica_fondo  # Volver al menú
+
+        if evento.type == pygame.KEYDOWN:
+            if evento.key == pygame.K_ESCAPE:
+                return True, bandera_musica_fondo  # Volver al menú
+
+    return False, bandera_musica_fondo
+
 
 def generar_texto_inicial(config: dict) -> None:
     """
@@ -38,7 +69,8 @@ def generar_texto_inicial(config: dict) -> None:
     pantalla = config["pantalla"]
     margen_superior = config["margen_superior"]
 
-    texto_principal = fuente.render("TOP 10 MEJORES PUNTAJES", True, color_texto)
+    texto_principal = fuente.render(
+        "TOP 10 MEJORES PUNTAJES", True, color_texto)
     ancho_texto = texto_principal.get_width()
 
     posicion_x = (ancho_pantalla - ancho_texto) / 2
@@ -46,37 +78,76 @@ def generar_texto_inicial(config: dict) -> None:
 
     pantalla.blit(texto_principal, (posicion_x, posicion_y))
 
-def leer_puntajes() -> list:
-    """
-    Lee el archivo de puntajes CSV generado y los agrupa en lista.
-    No recibe nada.
-    Retorna una lista de tuplas con el nombre y puntaje de cada jugador.
-    """
 
-    # VER DE VALIDAR SI EL SEGUNDO PARAMETRO NO ES UN NUMERO ENTONCES QUIERE DECIR QUE TIENE ENCABEZADO SINO NO
-    with open("assets/files/top_10_users.csv", "r") as archivo:
-        lista = archivo.readlines()
-        encabezado = []
-        jugadores = []
+# def leer_puntajes() -> list:
+#     """
+#     Lee el archivo de puntajes CSV generado y los agrupa en lista.
+#     No recibe nada.
+#     Retorna una lista de tuplas con el nombre y puntaje de cada jugador.
+#     """
 
-        for renglon in range(len(lista)):
-            elemento = lista[renglon]
-            if elemento == 0 and elemento[1].isalpha():
+#     # VER DE VALIDAR SI EL SEGUNDO PARAMETRO NO ES UN NUMERO ENTONCES QUIERE DECIR QUE TIENE ENCABEZADO SINO NO
+#     with open("assets/files/top_10_users.csv", "r") as archivo:
+#         lista = archivo.readlines()
+#         encabezado = []
+#         jugadores = []
+
+#         for renglon in range(len(lista)):
+#             elemento = lista[renglon]
+#             if elemento == 0 and elemento[1].isalpha():
+#                 partes = elemento.strip().split(",")
+#                 nombre = partes[0]
+#                 puntaje = partes[1]
+#                 encabezado.append((nombre, puntaje))
+#             else:
+#                 partes = elemento.strip().split(",")
+#                 nombre = partes[0]
+#                 puntaje = partes[1]
+#                 jugadores.append((nombre, puntaje))
+
+#         jugadores.sort(key=lambda x: x[1], reverse=True)
+
+#     return encabezado + jugadores
+
+
+def leer_puntajes(ruta_archivo) -> list:
+    """
+    Lee el archivo CSV con encabezado.
+    Devuelve una lista de tuplas con (nombre, puntaje).
+    """
+    jugadores = []
+    encabezado = []
+
+    try:
+        with open(ruta_archivo, "r") as archivo:
+            lineas = archivo.readlines()
+
+            for i in range(len(lineas)):
+                elemento = lineas[i]
                 partes = elemento.strip().split(",")
+
+                if len(partes) != 2:
+                    continue
+
                 nombre = partes[0]
                 puntaje = partes[1]
-                encabezado.append((nombre, puntaje))
-            else:
-                partes = elemento.strip().split(",")
-                nombre = partes[0]
-                puntaje = partes[1]
-                jugadores.append((nombre, puntaje))
+
+                if i == 0 and not puntaje.isdigit():
+                    encabezado.append( [nombre, puntaje] )
+                else:
+                    if puntaje.isdigit():
+                        jugadores.append( [nombre, int(puntaje)] )
 
         jugadores.sort(key=lambda x: x[1], reverse=True)
 
-    return encabezado + jugadores
+        return encabezado + jugadores
 
-def generar_tabla_puntajes(pygame, lista: list, config: dict) -> None:
+    except FileNotFoundError:
+        return []
+
+
+
+def generar_tabla_puntajes(lista: list, config: dict) -> None:
     """
     Genera una tabla dentro de la pantalla de puntajes para cada jugador.
     Recibe la informacion o lista de jugadores a mostrar, pygame y un diccionario de variables que necesito para armar la interfaz de la tabla.
@@ -100,35 +171,42 @@ def generar_tabla_puntajes(pygame, lista: list, config: dict) -> None:
 
     for i in range(len(lista)):
         fuente = fuente_encabezado if i == 0 else fuente_puntajes
-        
+
         if i == 1:
             color_fondo = color_primer_puesto
         elif i == 2:
             color_fondo = color_segundo_puesto
         elif i == 3:
             color_fondo = color_tercer_puesto
-        elif i%2 == 0:
+        elif i % 2 == 0:
             color_fondo = color_fondo_normal
         else:
             color_fondo = (255, 255, 255)
-            
+
         alto_texto = fuente.get_height()
         alto_renglon = alto_texto + config["espaciado_renglon"]
         ubicacion_y = inicio_tabla_y + (i * (alto_renglon + 5))
 
-        rect = pygame.Rect(ubicacion_x, ubicacion_y, ancho_renglon, alto_renglon)
+        rect = pygame.Rect(ubicacion_x, ubicacion_y,
+                           ancho_renglon, alto_renglon)
         pygame.draw.rect(pantalla, color_fondo, rect, border_radius=6)
 
         texto_pos = "#" if i == 0 else str(i)
         texto_posicion = fuente.render(texto_pos, True, color_texto)
-        texto_nombre = fuente.render(lista[i][0].upper() if i == 0 else lista[i][0], True, color_texto)
-        texto_puntaje = fuente.render(lista[i][1].upper() if i == 0 else str(lista[i][1]), True, color_texto)
+        texto_nombre = fuente.render(
+            lista[i][0].upper() if i == 0 else lista[i][0], True, color_texto)
+        texto_puntaje = fuente.render(
+            lista[i][1].upper() if i == 0 else str(lista[i][1]), True, color_texto)
 
-        pantalla.blit(texto_posicion, texto_posicion.get_rect(midleft=(rect.x + 15, rect.centery)))
-        pantalla.blit(texto_nombre, texto_nombre.get_rect(center=(rect.centerx, rect.centery)))
-        pantalla.blit(texto_puntaje, texto_puntaje.get_rect(midright=(rect.right - 30, rect.centery)))
+        pantalla.blit(texto_posicion, texto_posicion.get_rect(
+            midleft=(rect.x + 15, rect.centery)))
+        pantalla.blit(texto_nombre, texto_nombre.get_rect(
+            center=(rect.centerx, rect.centery)))
+        pantalla.blit(texto_puntaje, texto_puntaje.get_rect(
+            midright=(rect.right - 30, rect.centery)))
 
-def generar_boton_volver(pygame, config: dict) -> any:
+
+def generar_boton_volver(config: dict) -> any:
     """
     Genera el boton para volver al menú principal con su respectivo texto centrado.
     Recibe pygame y un diccionario de configuraciones que me sirven para generar el boton.
@@ -155,9 +233,16 @@ def generar_boton_volver(pygame, config: dict) -> any:
     pos_y = alto_pantalla - alto_boton - margen_inferior
 
     rect_boton = pygame.Rect(pos_x, pos_y, ancho_boton, alto_boton)
-    color_boton = color_hover if rect_boton.collidepoint(mouse_pos) else color_normal
+    color_boton = color_hover if rect_boton.collidepoint(
+        mouse_pos) else color_normal
 
     pygame.draw.rect(pantalla, color_boton, rect_boton, border_radius=10)
     pantalla.blit(texto_boton, texto_boton.get_rect(center=rect_boton.center))
 
     return rect_boton
+
+
+def activar_sonido(bandera_sonido: str) -> None:
+    if bandera_sonido == False:
+        pygame.mixer.music.play(-1)
+        return True
