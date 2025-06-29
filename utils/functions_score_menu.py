@@ -2,6 +2,11 @@ import pygame
 
 
 def obtener_config_puntajes(pantalla, ancho: int, alto: int) -> dict:
+    '''
+    Devuelve las variables y constantes necesarias para utilizar en funciones de renderizado.
+    Recibe la pantalla, el ancho y alto de nuestro juego.
+    Retorna un diccionario con las configuraciones.
+    '''
     fuente_titulo = pygame.font.Font("assets/fonts/fuentemario.ttf", 30)
     fuente_encabezado = pygame.font.Font("assets/fonts/fuentemario.ttf", 22)
     fuente_puntajes = pygame.font.Font("assets/fonts/fuentemario.ttf", 20)
@@ -31,10 +36,15 @@ def obtener_config_puntajes(pantalla, ancho: int, alto: int) -> dict:
     }
 
 
-def ejecutar_pantalla_puntajes(pygame, ventana, config_puntajes, bandera_musica_fondo):
+def ejecutar_pantalla_puntajes(ventana, config_puntajes, bandera_musica_fondo):
+    '''
+    Ejecuta y renderiza la pantalla de puntajes.
+    Recibe la ventana principal, la configuracion de variables de esa pantalla y la bandera para saber si el sonido está activo o no.
+    Retorna un booleano para saber si se vuelve al menu o no, y el contenido de la bandera del sonido.
+    '''
     ventana.fill(config_puntajes["color_pantalla_puntaje"])
     generar_texto_inicial(config_puntajes)
-    lista_puntajes = leer_puntajes()
+    lista_puntajes = leer_puntajes("assets/files/top_10_users.csv")
     generar_tabla_puntajes(lista_puntajes, config_puntajes)
     rect_boton_volver = generar_boton_volver(config_puntajes)
 
@@ -48,11 +58,11 @@ def ejecutar_pantalla_puntajes(pygame, ventana, config_puntajes, bandera_musica_
         if evento.type == pygame.MOUSEBUTTONDOWN:
             if rect_boton_volver.collidepoint(evento.pos):
                 if evento.button == 1:
-                    return True, bandera_musica_fondo  # Volver al menú
+                    return True, bandera_musica_fondo  
 
         if evento.type == pygame.KEYDOWN:
             if evento.key == pygame.K_ESCAPE:
-                return True, bandera_musica_fondo  # Volver al menú
+                return True, bandera_musica_fondo  
 
     return False, bandera_musica_fondo
 
@@ -77,37 +87,6 @@ def generar_texto_inicial(config: dict) -> None:
     posicion_y = margen_superior
 
     pantalla.blit(texto_principal, (posicion_x, posicion_y))
-
-
-# def leer_puntajes() -> list:
-#     """
-#     Lee el archivo de puntajes CSV generado y los agrupa en lista.
-#     No recibe nada.
-#     Retorna una lista de tuplas con el nombre y puntaje de cada jugador.
-#     """
-
-#     # VER DE VALIDAR SI EL SEGUNDO PARAMETRO NO ES UN NUMERO ENTONCES QUIERE DECIR QUE TIENE ENCABEZADO SINO NO
-#     with open("assets/files/top_10_users.csv", "r") as archivo:
-#         lista = archivo.readlines()
-#         encabezado = []
-#         jugadores = []
-
-#         for renglon in range(len(lista)):
-#             elemento = lista[renglon]
-#             if elemento == 0 and elemento[1].isalpha():
-#                 partes = elemento.strip().split(",")
-#                 nombre = partes[0]
-#                 puntaje = partes[1]
-#                 encabezado.append((nombre, puntaje))
-#             else:
-#                 partes = elemento.strip().split(",")
-#                 nombre = partes[0]
-#                 puntaje = partes[1]
-#                 jugadores.append((nombre, puntaje))
-
-#         jugadores.sort(key=lambda x: x[1], reverse=True)
-
-#     return encabezado + jugadores
 
 
 def leer_puntajes(ruta_archivo) -> list:
@@ -246,3 +225,7 @@ def activar_sonido(bandera_sonido: str) -> None:
     if bandera_sonido == False:
         pygame.mixer.music.play(-1)
         return True
+    
+def desactivar_sonido() -> None:
+    pygame.mixer.music.stop()
+    return True
