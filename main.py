@@ -9,6 +9,7 @@ from utils.functions_game_logic import (
 )
 from utils.constantes import *
 from utils.functions_victory_logic import *
+from utils.functions_game_menu import *
 
 # Inicializar pygame
 pygame.init()
@@ -47,6 +48,41 @@ timer_segundos = 0
 timer_minutos = 0
 texto_timer = fuente.render("00:00", True, COLOR_TIMER_NUMEROS)
 text_rect = texto_timer.get_rect(center=cuadro_timer.center)
+
+#diccionarios de los elementos
+
+dic_buscaminas = [{'dimension':0.95, 'x':0.55, 'y':0.05}]
+
+dic_botones = [
+    {'ancho': 0.19, 'alto': 0.14, 'x': 0.06 , 'y': 0.80 ,'texto': 'assets/images/texto_volver.png', 'fondo': 'assets/images/fondo_boton.png'},   
+    {'ancho': 0.19, 'alto': 0.14, 'x': 0.06 , 'y': 0.62 ,'texto': 'assets/images/texto_pausar.png', 'fondo': 'assets/images/fondo_boton.png'},
+    {'ancho': 0.12, 'alto': 0.16, 'x': 0.09 , 'y': 0.44 ,'texto': 'assets/images/honguito_verde.png','fondo': 'assets/images/fondo_boton.png'}
+    ]
+
+dic_contador = [{'ancho': 0.14, 'alto': 0.14, 'x': 0.082 , 'y': 0.25, 'fuente':0.65}]
+
+dic_timer = [
+    {'ancho': 0.22, 'alto': 0.15, 'x': 0.04 , 'y': 0.05 ,'texto': [0,0] ,'color': (255, 0, 0), 'fuente':80}
+     ]
+
+#variables
+fondo_pantall_juego = pygame.image.load('assets/images/fondo_pantalla_juego.jpg')
+fondo_pantall_juego = pygame.transform.scale(fondo_pantall_juego, (ANCHO, ALTO))
+
+COLOR_RECTANGULOS = (0, 0, 0)
+
+#elementos del juego
+
+buscaminas = crear_buscaminas(ventana, dic_buscaminas)
+
+botones = hacer_boton(ventana,dic_botones)    
+hover_botones = crear_hover_botones(ventana, dic_botones)
+
+contador = crear_contador(ventana, dic_contador, MINA)
+
+timer = crear_timer(ventana,dic_timer)
+
+# _____________________________________________________________________________________________________________________________
 
 # Juego
 pantalla_principal = True
@@ -138,20 +174,39 @@ while running:
         ventana.blit(fuente.render(texto_musica, True, BLANCO), rec_boton_musica)
 
     elif pantalla_juego:
+        mouse_pos = pygame.mouse.get_pos()
+        dic_elementos = [{'buscaminas':buscaminas, 'timer':timer, 'contador':contador, 'botones':botones, 'hover':hover_botones}]
+
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
-            if evento.type == evento_segundo and BUSCAMINAS_INICIADO:
+            if evento.type == timer[2] and BUSCAMINAS_INICIADO == True:
                 timer_segundos += 1
-                if timer_segundos == 60:
-                    timer_segundos = 0
+                dic_timer[0]['texto'] = [timer_minutos,timer_segundos]
+                timer = crear_timer(ventana,dic_timer)
+                if timer_segundos >= 59:
+                    timer_segundos = -1
                     timer_minutos += 1
-                texto_timer = fuente.render(hacer_cadena_timer(timer_segundos, timer_minutos), True, COLOR_TIMER_NUMEROS)
 
             if evento.type == pygame.MOUSEBUTTONDOWN:
-                
+                if botones[0]['rectangulo'].collidepoint(evento.pos) == True:
+                    print("Clickeaste sobre el volver.")
+                if botones[1]['rectangulo'].collidepoint(evento.pos) == True and BUSCAMINAS_INICIADO == True:
+                        print("Clickeaste sobre el pausar.") #BORRAR
+                        BUSCAMINAS_INICIADO = False
+                if botones[2]['rectangulo'].collidepoint(evento.pos) == True:
+                        print("Clickeaste sobre el reiniciar.") #BORRAR
+                        BUSCAMINAS_INICIADO = False
+                        timer_segundos = 0
+                        timer_minutos = 0
+                        dic_timer[0]['texto'] = [timer_minutos,timer_segundos]
+                        timer = crear_timer(ventana,dic_timer)
+
+                if buscaminas[0].collidepoint(evento.pos) == True:
+                        print("Clickeaste sobre el cuadro de buscaminas.") #BORRAR
+                        BUSCAMINAS_INICIADO = True
                 
                 
                 
@@ -167,8 +222,6 @@ while running:
                         timer_segundos = 0
                         timer_minutos = 0
                         texto_timer = fuente.render("00:00", True, COLOR_TIMER_NUMEROS)
-                        # matriz_estado = [[CUBIERTA for _ in range(COLUMNAS)] for _ in range(FILAS)]
-                        # matriz_juego = [[0 for _ in range(COLUMNAS)] for _ in range(FILAS)]
                         matriz_estado = []
                         for fila in range(FILAS):
                             fila_estado = []
@@ -287,16 +340,8 @@ while running:
                                 elif matriz_estado[fila][columna] == BANDERA:
                                     matriz_estado[fila][columna] = CUBIERTA
 
-        ventana.fill(COLOR_FONDO)
-        pygame.draw.rect(ventana, COLOR_RECTANGULOS, rec_buscaminas, width=5)
-        pygame.draw.rect(ventana, COLOR_RECTANGULOS, rec_boton_volver, width=5)
-        pygame.draw.rect(ventana, COLOR_RECTANGULOS, rec_boton_reiniciar, width=5)
-        pygame.draw.rect(ventana, COLOR_RECTANGULOS, rec_boton_pausar, width=5)
-        pygame.draw.rect(ventana, COLOR_RECTANGULOS, cuadro_timer, border_radius=15)
-        ventana.blit(texto_timer, text_rect)
-        ventana.blit(fuente.render("VOLVER", True, COLOR_TEXTO_BOTONES), rec_boton_volver)
-        ventana.blit(fuente.render("REINICIAR", True, COLOR_TEXTO_BOTONES), rec_boton_reiniciar)
-        ventana.blit(fuente.render("PAUSAR", True, COLOR_TEXTO_BOTONES), rec_boton_pausar)
+        ventana.blit(fondo_pantall_juego, (0,0))
+        dibujar_elementos_pantalla(ventana, dic_elementos, COLOR_RECTANGULOS, mouse_pos)
 
         if matriz_juego:
             for fila in range(FILAS):
@@ -341,8 +386,6 @@ while running:
             bandera_musica_fondo = False
             desactivar_sonido()
             pantalla_principal = True
-
-
 
     pygame.display.flip()
 
