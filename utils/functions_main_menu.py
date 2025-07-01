@@ -97,4 +97,6 @@ def pantalla_opciones_resolucion(ventana, fuente, resoluciones, resolucion_actua
 
     return seleccion, volver
 
-
+def blit_centrado(ventana, imagen):
+    rect = imagen.get_rect(center=(ventana.get_width() // 2, ventana.get_height() // 2))
+    ventana.blit(imagen, rect)

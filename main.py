@@ -24,21 +24,16 @@ icono = pygame.image.load("assets/images/icono.png")
 pygame.display.set_icon(icono)
 
 # Fondo y fuente
-fondo = pygame.image.load("assets/images/fondofinal.png")
+fondo = pygame.image.load("assets/images/fondofinal.png").convert()
 fondo = pygame.transform.scale(fondo, (ANCHO, ALTO))
 fuente = pygame.font.Font("assets/fonts/fuentemario.ttf", 20)
 
 # Sonido
 pygame.mixer.music.load("assets/sounds/sonido_fondo.mp3")
-pygame.mixer.music.set_volume(0.5)
+pygame.mixer.music.set_volume(0.2)
 bandera_musica_fondo = False
 musica_activada = True
 
-# Botón silenciar música
-ancho_boton_musica = ANCHO * 0.15
-alto_boton_musica = ALTO * 0.06
-rec_boton_musica = pygame.Rect(
-    ANCHO - ancho_boton_musica - 10, 10, ancho_boton_musica, alto_boton_musica)
 
 # Menu
 opciones = ["Iniciar Juego", "Puntajes", "Opciones", "Salir"]
@@ -102,9 +97,15 @@ running = True
 while running:
     # Pantalla Principal
     mouse_pos = pygame.mouse.get_pos()
+    # Botón silenciar música
+    ancho_boton_musica = int(ANCHO * 0.15)
+    alto_boton_musica = int(ALTO * 0.06)
+    rec_boton_musica = pygame.Rect(
+    ANCHO - ancho_boton_musica - 10, 10, ancho_boton_musica, alto_boton_musica)
     if pantalla_principal:
         mouse_pos = pygame.mouse.get_pos()
         opcion_seleccionada = obtener_opcion(rects_opciones, mouse_pos)
+        # blit_centrado(ventana, fondo)
         ventana.blit(fondo, (0, 0))
         dibujar_menu(ventana, fondo, opciones, fuente, ANCHO,
                      opcion_seleccionada, BLANCO, NEGRO, rects_opciones)
@@ -136,10 +137,15 @@ while running:
                     pygame.quit()
                     sys.exit()
 
+    # Boton de musica
+        # Escalado de la fuente de texto del boton de musica proporcional a la pantalla
+        tamaño_fuente_musica = max(12, int(ALTO * 0.03))
+        fuente_musica = pygame.font.Font("assets/fonts/fuentemario.ttf", tamaño_fuente_musica)
         pygame.draw.rect(ventana, (0, 0, 0), rec_boton_musica, width=3)
         texto_musica = "MUSICA ON" if musica_activada else "MUSICA OFF"
-        ventana.blit(fuente.render(
-            texto_musica, True, BLANCO), rec_boton_musica)
+        texto_render = fuente.render(texto_musica, True, BLANCO)
+        texto_rect = texto_render.get_rect(center=rec_boton_musica.center)
+        ventana.blit(texto_render, texto_rect)
         
     #Pantalla de Dificultad
     elif pantalla_dificultad:
@@ -411,6 +417,13 @@ while running:
                 pygame.image.load("assets/images/fondofinal.png"), (ANCHO, ALTO))
             fondo_pantall_juego = pygame.transform.scale(
                 pygame.image.load('assets/images/fondo_pantalla_juego.jpg'), (ANCHO, ALTO))
+            botones = hacer_boton(ventana, dic_botones)
+            hover_botones = crear_hover_botones(ventana, dic_botones, imagenes_hover)
+            botones_dif = hacer_boton(ventana, dic_botones_dif)
+            botones_dif_hover = crear_hover_botones(ventana, dic_botones_dif, img_dif_hover)
+            buscaminas = crear_buscaminas(ventana, dic_buscaminas)
+            timer = crear_timer(ventana, dic_timer)
+            contador = crear_contador(ventana, dic_contador, MINA - banderas_colocadas)
 
         if nueva_resolucion or volver:
             pantalla_opciones = False
