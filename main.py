@@ -1,14 +1,10 @@
 import pygame
 import sys
 from utils.functions_score_menu import *
-from utils.functions_game_menu import hacer_cadena_timer
-from utils.functions_main_menu import dibujar_menu, obtener_opcion
-from utils.functions_game_logic import (
-    generar_matriz, descubrir,
-    CUBIERTA, DESCUBIERTA, BANDERA, MINA
-)
-from utils.constantes import *
-from utils.functions_victory_logic import *
+from utils.functions_game_menu import *
+from utils.functions_main_menu import *
+from utils.functions_game_logic import *
+from utils.constants import *
 from utils.functions_game_menu import *
 
 # Inicializar pygame
@@ -39,55 +35,34 @@ rec_boton_musica = pygame.Rect(
 opciones = ["Iniciar Juego", "Puntajes", "Opciones", "Salir"]
 rects_opciones = []
 
-# Puntajes
-config_puntajes = obtener_config_puntajes(ventana, ANCHO, ALTO)
+# Dificultad
+botones_dif = hacer_boton(ventana, dic_botones_dif)
+botones_dif_hover = crear_hover_botones(
+    ventana, dic_botones_dif, img_dif_hover)
+
+ruta_fondo_dif = 'assets/images/fondo_pantalla_dificultad.jpg'
+
+img_titulos = [
+    {'titulo': 'assets/images/titulo_pantalla_dificultad.png',
+        'superficie': ventana, 'rect': 'pantalla'},
+    {'titulo': 'assets/images/titulo_boton_facil.png',
+        'superficie': botones_dif[0]['rectangulo'], 'rect': 'boton'},
+    {'titulo': 'assets/images/titulo_boton_medio.png',
+        'superficie': botones_dif[1]['rectangulo'], 'rect': 'boton'},
+    {'titulo': 'assets/images/titulo_boton_dificil.png',
+        'superficie': botones_dif[2]['rectangulo'], 'rect': 'boton'}
+]
+
 
 # Timer
-evento_segundo = pygame.USEREVENT + 1
-pygame.time.set_timer(evento_segundo, 1000)
 timer_segundos = 0
 timer_minutos = 0
-texto_timer = fuente.render("00:00", True, COLOR_TIMER_NUMEROS)
-text_rect = texto_timer.get_rect(center=cuadro_timer.center)
 
-
-# diccionarios de los elementos
-
-dic_buscaminas = [{'dimension': 0.95, 'x': 0.55, 'y': 0.05}]
-
-dic_botones = [
-    {'ancho': 0.19, 'alto': 0.14, 'x': 0.06, 'y': 0.80,
-        'texto': 'assets/images/texto_volver.png', 'fondo': 'assets/images/fondo_boton.png'},
-    {'ancho': 0.19, 'alto': 0.14, 'x': 0.06, 'y': 0.62,
-        'texto': 'assets/images/texto_pausar.png', 'fondo': 'assets/images/fondo_boton.png'},
-    {'ancho': 0.12, 'alto': 0.16, 'x': 0.09, 'y': 0.44,
-        'texto': 'assets/images/honguito_verde.png', 'fondo': 'assets/images/fondo_boton.png'}
-]
-
-dic_contador = [{'ancho': 0.14, 'alto': 0.14,
-                 'x': 0.082, 'y': 0.25, 'fuente': 0.65}]
-
-dic_timer = [
-    {'ancho': 0.22, 'alto': 0.15, 'x': 0.04, 'y': 0.05,
-        'texto': [0, 0], 'color': (255, 0, 0), 'fuente': 80}
-]
-
-# variables
-fondo_pantall_juego = pygame.image.load(
-    'assets/images/fondo_pantalla_juego.jpg')
-fondo_pantall_juego = pygame.transform.scale(
-    fondo_pantall_juego, (ANCHO, ALTO))
-
-COLOR_RECTANGULOS = (0, 0, 0)
-
-# elementos del juego
 
 buscaminas = crear_buscaminas(ventana, dic_buscaminas)
 
 botones = hacer_boton(ventana, dic_botones)
-hover_botones = crear_hover_botones(ventana, dic_botones)
-
-contador = crear_contador(ventana, dic_contador, MINA)
+hover_botones = crear_hover_botones(ventana, dic_botones, imagenes_hover)
 
 timer = crear_timer(ventana, dic_timer)
 
@@ -96,58 +71,31 @@ timer = crear_timer(ventana, dic_timer)
 pantalla_principal = True
 pantalla_juego = False
 pantalla_puntajes = False
-pantalla_prueba = False
+pantalla_dificultad = False
 BUSCAMINAS_INICIADO = False
+dificultad_elegida = None
 
-FILAS = 8
-COLUMNAS = 8
-MINAS = 10
 primera_jugada = True
-
-matriz_estado = []
-for fila in range(FILAS):
-    fila_estado = []
-    for columna in range(COLUMNAS):
-        fila_estado.append(CUBIERTA)
-    matriz_estado.append(fila_estado)
-
-matriz_juego = None
-
-matriz_juego = []
-for fila in range(FILAS):
-    fila_juego = []
-    for columna in range(COLUMNAS):
-        fila_juego.append(0)
-    matriz_juego.append(fila_juego)
+banderas_colocadas = 0
 
 estado_derrota = False
 celda_explotada = None
 
-colores_numeros = {
-    1: (0, 0, 255),
-    2: (0, 128, 0),
-    3: (255, 0, 0),
-    4: (0, 0, 128),
-    5: (128, 0, 0),
-    6: (0, 128, 128),
-    7: (0, 0, 0),
-    8: (128, 128, 128)
-}
+matriz_estado = None
+matriz_juego = None
 
-imagen_mina = pygame.transform.scale(
-    pygame.image.load("assets/images/imagen_mina.png"),
-    (tamaño_celda, tamaño_celda)
-)
-imagen_bandera = pygame.transform.scale(pygame.image.load(
-    "assets/images/imagen_bandera.png"), (tamaño_celda, tamaño_celda))
+ruta_archivo_puntajes = "top_10.csv"
 
 
 # Bucle principal
 running = True
+
 while running:
+    mouse_pos = pygame.mouse.get_pos()
     if pantalla_principal:
         mouse_pos = pygame.mouse.get_pos()
         opcion_seleccionada = obtener_opcion(rects_opciones, mouse_pos)
+        ventana.blit(fondo, (0, 0))
         dibujar_menu(ventana, fondo, opciones, fuente, ANCHO,
                      opcion_seleccionada, NEGRO, BLANCO, rects_opciones)
 
@@ -167,7 +115,7 @@ while running:
                         pygame.mixer.music.stop()
                 elif opcion_seleccionada == 0:
                     pantalla_principal = False
-                    pantalla_juego = True
+                    pantalla_dificultad = True
                 elif opcion_seleccionada == 1:
                     pantalla_principal = False
                     pantalla_puntajes = True
@@ -179,6 +127,58 @@ while running:
         texto_musica = "MUSICA ON" if musica_activada else "MUSICA OFF"
         ventana.blit(fuente.render(
             texto_musica, True, BLANCO), rec_boton_musica)
+
+    elif pantalla_dificultad:
+
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+            if evento.type == pygame.MOUSEBUTTONDOWN:
+
+                if botones_dif[0]['rectangulo'].collidepoint(evento.pos):
+                    dificultad_elegida = 'facil'
+                    (
+                        matriz_estado, matriz_juego, columnas, minas, tamaño_celda,
+                        imagen_mina, imagen_bandera, contador
+                    ) = procesar_dificultad(
+                        dificultad_elegida, dic_valores_dif, buscaminas[0].width, CUBIERTA,
+                        ventana, dic_contador
+                    )
+                    MINAS = minas
+                    pantalla_dificultad = False
+                    pantalla_juego = True
+
+                elif botones_dif[1]['rectangulo'].collidepoint(evento.pos):
+                    dificultad_elegida = 'normal'
+                    (
+                        matriz_estado, matriz_juego, columnas, minas, tamaño_celda,
+                        imagen_mina, imagen_bandera, contador
+                    ) = procesar_dificultad(
+                        dificultad_elegida, dic_valores_dif, buscaminas[0].width, CUBIERTA,
+                        ventana, dic_contador
+                    )
+                    MINAS = minas
+                    pantalla_dificultad = False
+                    pantalla_juego = True
+
+                elif botones_dif[2]['rectangulo'].collidepoint(evento.pos):
+                    dificultad_elegida = 'dificil'
+
+                    (
+                        matriz_estado, matriz_juego, columnas, minas, tamaño_celda,
+                        imagen_mina, imagen_bandera, contador
+                    ) = procesar_dificultad(
+                        dificultad_elegida, dic_valores_dif, buscaminas[0].width, CUBIERTA,
+                        ventana, dic_contador
+                    )
+                    MINAS = minas
+                    pantalla_dificultad = False
+                    pantalla_juego = True
+
+        dibujar_pantalla_dif(ventana, img_titulos, ruta_fondo_dif)
+        dibujar_botones(ventana, botones_dif, botones_dif_hover, mouse_pos)
 
     elif pantalla_juego:
         dic_elementos = [{'buscaminas': buscaminas, 'timer': timer,
@@ -199,138 +199,84 @@ while running:
             if evento.type == pygame.MOUSEBUTTONDOWN:
                 if estado_derrota:
                     if botones[0]['rectangulo'].collidepoint(evento.pos):
+                        (
+                            banderas_colocadas, contador, BUSCAMINAS_INICIADO,
+                            timer_segundos, timer_minutos, dic_timer, timer, texto_timer,
+                            matriz_estado, matriz_juego, primera_jugada, estado_derrota, celda_explotada
+                        ) = reiniciar_juego(ventana, MINAS, fuente, dic_contador, dic_timer, columnas, columnas, COLOR_TIMER_NUMEROS, CUBIERTA)
 
                         pantalla_principal = True
                         pantalla_juego = False
-                        BUSCAMINAS_INICIADO = False
-                        timer_segundos = 0
-                        timer_minutos = 0
-                        dic_timer[0]['texto'] = [timer_minutos, timer_segundos]
-                        timer = crear_timer(ventana, dic_timer)
-                        texto_timer = fuente.render(
-                            "00:00", True, COLOR_TIMER_NUMEROS)
 
-                        matriz_estado = []
-                        for fila in range(FILAS):
-                            fila_estado = []
-                            for columna in range(COLUMNAS):
-                                fila_estado.append(CUBIERTA)
-                            matriz_estado.append(fila_estado)
-
-                        matriz_juego = []
-                        for fila in range(FILAS):
-                            fila_juego = []
-                            for columna in range(COLUMNAS):
-                                fila_juego.append(0)
-                            matriz_juego.append(fila_juego)
-
-                        primera_jugada = True
-                        estado_derrota = False
-                        celda_explotada = None
                     elif botones[2]['rectangulo'].collidepoint(evento.pos):
-                        BUSCAMINAS_INICIADO = False
-                        timer_segundos = 0
-                        timer_minutos = 0
-                        dic_timer[0]['texto'] = [timer_minutos, timer_segundos]
-                        timer = crear_timer(ventana, dic_timer)
-                        texto_timer = fuente.render(
-                            "00:00", True, COLOR_TIMER_NUMEROS)
-                        matriz_estado = [
-                            [CUBIERTA for _ in range(COLUMNAS)] for _ in range(FILAS)]
-                        matriz_juego = [
-                            [0 for _ in range(COLUMNAS)] for _ in range(FILAS)]
-                        primera_jugada = True
-                        estado_derrota = False
-                        celda_explotada = None
+
+                        (
+                            banderas_colocadas, contador, BUSCAMINAS_INICIADO,
+                            timer_segundos, timer_minutos, dic_timer, timer, texto_timer,
+                            matriz_estado, matriz_juego, primera_jugada, estado_derrota, celda_explotada
+                        ) = reiniciar_juego(
+                            ventana, MINAS, fuente, dic_contador, dic_timer,
+                            columnas, columnas, COLOR_TIMER_NUMEROS, CUBIERTA
+                        )
+
                     continue
 
                 if botones[0]['rectangulo'].collidepoint(evento.pos):
-                    print("Clickeaste sobre el volver.")
+
                     pantalla_principal = True
                     pantalla_juego = False
-                    BUSCAMINAS_INICIADO = False
-                    timer_segundos = 0
-                    timer_minutos = 0
-                    texto_timer = fuente.render(
-                        "00:00", True, COLOR_TIMER_NUMEROS)
+                    (
+                        banderas_colocadas, contador, BUSCAMINAS_INICIADO,
+                        timer_segundos, timer_minutos, dic_timer, timer, texto_timer,
+                        matriz_estado, matriz_juego, primera_jugada, estado_derrota, celda_explotada
+                    ) = reiniciar_juego(ventana, MINAS, fuente, dic_contador, dic_timer, columnas, columnas, COLOR_TIMER_NUMEROS, CUBIERTA)
 
-                    matriz_estado = []
-                    for fila in range(FILAS):
-                        fila_estado = []
-                        for columna in range(COLUMNAS):
-                            fila_estado.append(CUBIERTA)
-                        matriz_estado.append(fila_estado)
-
-                    matriz_juego = []
-                    for fila in range(FILAS):
-                        fila_juego = []
-                        for columna in range(COLUMNAS):
-                            fila_juego.append(0)
-                        matriz_juego.append(fila_juego)
-
-                    primera_jugada = True
-                    estado_derrota = False
-                    celda_explotada = None
                 elif botones[1]['rectangulo'].collidepoint(evento.pos) and BUSCAMINAS_INICIADO:
-                    print("Clickeaste sobre el pausar.")  # BORRAR
                     BUSCAMINAS_INICIADO = False
                 elif botones[2]['rectangulo'].collidepoint(evento.pos):
-                    print("Clickeaste sobre el reiniciar.")  # BORRAR
-                    BUSCAMINAS_INICIADO = False
-                    timer_segundos = 0
-                    timer_minutos = 0
-                    dic_timer[0]['texto'] = [timer_minutos, timer_segundos]
-                    timer = crear_timer(ventana, dic_timer)
-                    matriz_estado = []
-                    for fila in range(FILAS):
-                        fila_estado = []
-                        for columna in range(COLUMNAS):
-                            fila_estado.append(CUBIERTA)
-                        matriz_estado.append(fila_estado)
 
-                    matriz_juego = []
-                    for fila in range(FILAS):
-                        fila_juego = []
-                        for columna in range(COLUMNAS):
-                            fila_juego.append(0)
-                        matriz_juego.append(fila_juego)
-
-                    primera_jugada = True
+                    (
+                        banderas_colocadas, contador, BUSCAMINAS_INICIADO,
+                        timer_segundos, timer_minutos, dic_timer, timer, texto_timer,
+                        matriz_estado, matriz_juego, primera_jugada, estado_derrota, celda_explotada
+                    ) = reiniciar_juego(ventana, MINAS, fuente, dic_contador, dic_timer, columnas, columnas, COLOR_TIMER_NUMEROS, CUBIERTA)
 
                 elif buscaminas[0].collidepoint(evento.pos):
                     if not estado_derrota:
-                        # BORRAR
-                        print("Clickeaste sobre el cuadro de buscaminas.")
                         BUSCAMINAS_INICIADO = True
                         x, y = evento.pos
                         columna = int(
-                            (x - posicion_x_buscaminas) // tamaño_celda)
-                        fila = int((y - posicion_y_buscaminas) // tamaño_celda)
+                            (x - buscaminas[0].x) // tamaño_celda)
+                        fila = int((y - buscaminas[0].y) // tamaño_celda)
 
-                        if 0 <= fila < FILAS and 0 <= columna < COLUMNAS:
+                        if 0 <= fila < columnas and 0 <= columna < columnas:
+
                             if evento.button == 1:
                                 if matriz_estado[fila][columna] != BANDERA:
                                     if primera_jugada:
-                                        matriz_juego = generar_matriz(
-                                            FILAS, COLUMNAS, MINAS, (fila, columna))
+                                        while True:
+                                            matriz_juego = generar_matriz(
+                                                columnas, columnas, MINAS, (fila, columna))
+                                            if matriz_juego[fila][columna] == 0:
+                                                break
                                         primera_jugada = False
                                         BUSCAMINAS_INICIADO = True
+
                                     exploto = descubrir(
                                         matriz_estado, matriz_juego, fila, columna)
                                     if exploto:
                                         BUSCAMINAS_INICIADO = False
                                         estado_derrota = True
                                         celda_explotada = (fila, columna)
-                                        for f in range(FILAS):
-                                            for c in range(COLUMNAS):
+                                        for f in range(columnas):
+                                            for c in range(columnas):
                                                 if matriz_juego[f][c] == MINA:
                                                     matriz_estado[f][c] = DESCUBIERTA
-                                        pygame.mixer.music.stop()
-                                        sonido_derrota = pygame.mixer.Sound(
-                                            "assets/sounds/sonido_derrota.mp3")
-                                        sonido_derrota.play()
+
+                                        activar_sonido_derrota()
                                     else:
-                                        total_celdas = FILAS * COLUMNAS
+                                        total_celdas = columnas * columnas
+
                                         descubiertas = 0
                                         for fila in matriz_estado:
                                             for celda in fila:
@@ -343,34 +289,44 @@ while running:
                                                 ventana, ANCHO, ALTO)
                                             tiempo_empleado = timer_minutos * 60 + timer_segundos
                                             penalidad = definir_penalidad(
-                                                "Medio")
+                                                dificultad_elegida)
                                             puntaje_final = calcular_puntaje(
                                                 penalidad, tiempo_empleado)
                                             nombre_usuario = mostrar_pantalla_victoria(
                                                 ventana, puntaje_final, config_victoria)
-                                            datos = leer_puntajes("top_10.csv")
+                                            datos = leer_puntajes(
+                                                ruta_archivo_puntajes)
                                             datos_finales = validar_datos_archivo(
                                                 datos, nombre_usuario, puntaje_final)
                                             crear_sobreescribir_archivo(
-                                                datos_finales, "top_10.csv")
+                                                datos_finales, ruta_archivo_puntajes)
                                             pantalla_juego = False
                                             pantalla_principal = True
 
                             elif evento.button == 3:
                                 if matriz_estado[fila][columna] == CUBIERTA:
                                     matriz_estado[fila][columna] = BANDERA
+                                    banderas_colocadas += 1
+                                    contador = crear_contador(
+                                        ventana, dic_contador, MINAS - banderas_colocadas)
                                 elif matriz_estado[fila][columna] == BANDERA:
                                     matriz_estado[fila][columna] = CUBIERTA
+                                    banderas_colocadas -= 1
+                                    contador = crear_contador(
+                                        ventana, dic_contador, MINAS - banderas_colocadas)
 
+        # ventana.blit(fondo_pantall_juego, (0, 0))
         ventana.blit(fondo_pantall_juego, (0, 0))
+
         dibujar_elementos_pantalla(
             ventana, dic_elementos, COLOR_RECTANGULOS, mouse_pos)
 
         if matriz_juego:
-            for fila in range(FILAS):
-                for columna in range(COLUMNAS):
-                    x = posicion_x_buscaminas + columna * tamaño_celda
-                    y = posicion_y_buscaminas + fila * tamaño_celda
+            for fila in range(columnas):
+                for columna in range(columnas):
+
+                    x = buscaminas[0].x + columna * tamaño_celda
+                    y = buscaminas[0].y + fila * tamaño_celda
                     estado = matriz_estado[fila][columna]
 
                     if estado == CUBIERTA:
@@ -380,7 +336,10 @@ while running:
 
                         pygame.draw.rect(
                             ventana, COLOR_DESCUBIERTA, (x, y, tamaño_celda, tamaño_celda))
-                        ventana.blit(imagen_bandera, (x, y))
+                        imagen_rect = imagen_bandera.get_rect()
+                        imagen_rect.center = (
+                            x + tamaño_celda // 2, y + tamaño_celda // 2)
+                        ventana.blit(imagen_bandera, imagen_rect)
 
                     elif estado == DESCUBIERTA:
 
@@ -393,9 +352,12 @@ while running:
                                 ventana, COLOR_DESCUBIERTA, (x, y, tamaño_celda, tamaño_celda))
                         valor = matriz_juego[fila][columna]
 
-                        # DIBUJO MINA EN EL VALOR
                         if valor == MINA:
-                            ventana.blit(imagen_mina, (x, y))
+                            imagen_rect = imagen_mina.get_rect()
+                            imagen_rect.center = (
+                                x + tamaño_celda // 2, y + tamaño_celda // 2)
+                            ventana.blit(imagen_mina, imagen_rect)
+
                         if valor > 0:
                             color = colores_numeros.get(valor, (0, 0, 0))
                             texto = fuente.render(str(valor), True, color)
@@ -407,7 +369,7 @@ while running:
                                      (x, y, tamaño_celda, tamaño_celda), width=2)
 
     elif pantalla_puntajes == True:
-
+        config_puntajes = obtener_config_puntajes(ventana, ANCHO, ALTO)
         volver_al_menu, bandera_musica_fondo = ejecutar_pantalla_puntajes(
             ventana, config_puntajes, bandera_musica_fondo)
         if volver_al_menu:

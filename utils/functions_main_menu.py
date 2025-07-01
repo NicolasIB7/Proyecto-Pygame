@@ -4,7 +4,7 @@ def dibujar_menu(ventana, fondo, opciones, fuente, ANCHO, opcion_seleccionada, N
     '''
     Documentación
     '''
-    ventana.blit(fondo, (0, 0))  # Fondo
+    ventana.blit(fondo, (0, 0))  
     rects_opciones.clear()
 
     for i, texto in enumerate(opciones):
@@ -23,3 +23,6 @@ def obtener_opcion(rects_opciones, mouse_pos):
         if rect.collidepoint(mouse_pos):
             return i
     return None
+
+
+

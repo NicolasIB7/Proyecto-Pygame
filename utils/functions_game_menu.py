@@ -8,7 +8,7 @@ def hacer_cadena_timer(segundos: int, minutos: int) -> str:
     timer_minutos = f'0{minutos}' if minutos < 10 else f'{minutos}'
     return f'{timer_minutos}:{timer_segundos}'
 
-def calcular_dimenciones_posicion(pantalla, dim_pos:dict, indice=0)->tuple:
+def calcular_dimensiones_posicion(pantalla, dim_pos:dict, indice=0)->tuple:
     '''
     Calcula las dimensiones y posicion de un elemento en una pestaña\n
     pantalla: Superficie que usa para calcular los elementos\n
@@ -61,7 +61,7 @@ def hacer_boton(pantalla, boton:dict)->dict:
     """
     botones = []
     for i in range(len(boton)):
-        dim_pos = calcular_dimenciones_posicion(pantalla,boton,i)
+        dim_pos = calcular_dimensiones_posicion(pantalla,boton,i)
         rec_boton = pygame.Rect(dim_pos[0], dim_pos[1], dim_pos[2], dim_pos[3])
 
         imagen_texto_boton = pygame.image.load(boton[i]['texto'])
@@ -78,14 +78,15 @@ def hacer_boton(pantalla, boton:dict)->dict:
     
     return botones
 
-def crear_hover_botones(pantalla, dic_botones:dict)->dict:
+
+def crear_hover_botones(pantalla, dic_botones:dict, texto:list)->dict:
     '''
     Crea el efecto del hover de un boton\n
     pantalla: Superficie que usa para calcular los elementos\n
     dic_botones: Diccionario de los botones del cual va a hacer su efecto\n
+    texto(list): Lista de texto del boton a cambiar para el efecto\n
     return(dict): Retorna un dict del efecto de los botones
     '''
-    texto = ['assets/images/texto_volver_hover.png','assets/images/texto_pausar_hover.png','assets/images/honguito_rojo.png']
     efecto = 0.002
     
     for i in range(len(dic_botones)):
@@ -140,7 +141,7 @@ def crear_texto_contador(numeros:int=0)->str:
         if len(texto) == 1:
          texto = '00' + str(numeros)
         else:
-            texto = '0' + str(numeros)
+            texto =  str(numeros)
 
     return texto
 
@@ -151,7 +152,7 @@ def crear_contador(pantalla, dic_contador:dict, contar:int)->tuple:
     dic_contador(dict): dict con los valores del contador\n
     return(tuple): Retorna una tupla con los valores (rectangulo, pocision de texto, texto)
     '''
-    dim_pos = calcular_dimenciones_posicion(pantalla,dic_contador)
+    dim_pos = calcular_dimensiones_posicion(pantalla,dic_contador)
     rec_contador = pygame.Rect(dim_pos[0], dim_pos[1], dim_pos[2], dim_pos[3])
     
     superficie = pygame.Surface((dim_pos[2], dim_pos[3]))
@@ -196,7 +197,7 @@ def crear_timer(pantalla,timer:dict)->tuple:
     evento_segundo = pygame.USEREVENT + 1
     pygame.time.set_timer(evento_segundo, 1000)
 
-    dim_pos = calcular_dimenciones_posicion(pantalla,timer)
+    dim_pos = calcular_dimensiones_posicion(pantalla,timer)
     cuadro_timer = pygame.Rect(dim_pos[0], dim_pos[1], dim_pos[2], dim_pos[3])
 
     tamaño_fuente_timer =  int(((timer[0]['fuente']*pantalla.get_width())/800 + (timer[0]['fuente']*pantalla.get_height())/600)/2)
@@ -233,3 +234,147 @@ def dibujar_elementos_pantalla(pantalla, elementos:dict, COLOR_RECTANGULOS:tuple
 
     #botones
     dibujar_botones(pantalla, elementos[0]['botones'], elementos[0]['hover'], mouse_pos)
+    
+    
+def dibujar_pantalla_dif(pantalla, imagenes:dict, fondo:str):
+    '''
+    Dibuja el fondo con un titulo y/o titulos de los botones\n
+    pantalla: Pantalla donde va a dibujar\n
+    imagenes(dict): los titulos que dibuja\n
+    fondo(str): ruta del fondo que va a dibujar
+    '''
+    pantalla_rect = imagenes[0]['superficie'].get_rect()
+
+    fondo_pantall_dificultad = pygame.image.load(fondo)
+    fondo_pantall_dificultad = pygame.transform.scale(fondo_pantall_dificultad, (pantalla_rect.width, pantalla_rect.height))
+    pantalla.blit(fondo_pantall_dificultad, (0,0))
+    for i in range(len(imagenes)):
+
+        if imagenes[i]['rect'] == 'pantalla':
+            imagen_texto_boton = pygame.image.load(imagenes[i]['titulo'])
+            imagen_texto_boton = pygame.transform.scale(imagen_texto_boton, (pantalla_rect.width//1.2, pantalla_rect.height//3.5))
+            imagen_rect = imagen_texto_boton.get_rect(center=(pantalla_rect.centerx + 15, pantalla_rect.centery -200))
+        else:
+            imagen_texto_boton = pygame.image.load(imagenes[i]['titulo'])
+            imagen_texto_boton = pygame.transform.scale(imagen_texto_boton, (imagenes[i]['superficie'].width//1.2, imagenes[i]['superficie'].height//1.85))
+            imagen_rect = imagen_texto_boton.get_rect(center=(imagenes[i]['superficie'].centerx, imagenes[i]['superficie'].centery -125))
+   
+        pantalla.blit(imagen_texto_boton, imagen_rect)
+
+def extraer_informacion_dif(dificultad:str, diccionario:dict)->tuple:
+    '''
+    Extrae y retorna la informacion del diccionario de dificultad\n
+    dificultad(str): Clave de dificultad del cual se va a extraer la info\n
+    diccionario(dict): Diccionario que itinera para extraer la info\n
+    return(tuple): Retorna (dificultad, filas_columnas, minas)
+    '''
+    for i in range(len(diccionario)):
+        if diccionario[i]['dificultad'] == dificultad:
+            filas_columnas = diccionario[i]['columnas']
+            minas = diccionario[i]['minas']
+
+    return dificultad, filas_columnas, minas 
+    
+
+
+
+def inicializar_matriz_por_dificultad(dificultad:str, diccionario:dict, ancho_buscaminas:int, CUBIERTA) -> tuple:
+    '''
+    Inicializa matrices y parámetros de juego según la dificultad elegida
+    dificultad(str): clave de dificultad (facil/normal/dificil)
+    diccionario(dict): lista de valores de dificultad
+    ancho_buscaminas(int): ancho del área del buscaminas
+    return:
+        matriz_estado
+        matriz_juego
+        columnas
+        minas
+        tamaño_celda
+    '''
+    for config in diccionario:
+        if config['dificultad'] == dificultad:
+            columnas = config['columnas']
+            minas = config['minas']
+            break
+
+    matriz_estado = [[CUBIERTA for _ in range(columnas)] for _ in range(columnas)]
+    matriz_juego = [[0 for _ in range(columnas)] for _ in range(columnas)]
+
+    tamaño_celda = int(ancho_buscaminas // columnas)
+
+    return matriz_estado, matriz_juego, columnas, minas, tamaño_celda
+    
+
+
+def reiniciar_juego(ventana, minas, fuente, dic_contador, dic_timer, columnas, filas, color_timer_numeros, CUBIERTA):
+
+    banderas_colocadas = 0
+    contador = crear_contador(ventana, dic_contador, minas) 
+    BUSCAMINAS_INICIADO = False
+    timer_segundos = 0
+    timer_minutos = 0
+    dic_timer[0]['texto'] = [timer_minutos, timer_segundos]
+    timer = crear_timer(ventana, dic_timer)  
+    texto_timer = fuente.render("00:00", True, color_timer_numeros)
+
+    matriz_estado = [[CUBIERTA for _ in range(columnas)] for _ in range(filas)]
+    matriz_juego = [[0 for _ in range(columnas)] for _ in range(filas)]
+
+    primera_jugada = True
+    estado_derrota = False
+    celda_explotada = None
+
+    return (
+        banderas_colocadas, contador, BUSCAMINAS_INICIADO,
+        timer_segundos, timer_minutos, dic_timer, timer, texto_timer,
+        matriz_estado, matriz_juego, primera_jugada, estado_derrota, celda_explotada
+    )
+
+
+def procesar_dificultad(
+    dificultad,
+    dic_valores_dif,
+    buscaminas_width,
+    cubierto_constante,
+    ventana,
+    dic_contador
+):
+    """
+    Configura todo según la dificultad elegida.
+    Retorna:
+    - matriz_estado
+    - matriz_juego
+    - columnas
+    - minas
+    - tamaño_celda
+    - imagen_mina
+    - imagen_bandera
+    - contador
+    """
+
+
+    (matriz_estado, matriz_juego, columnas, minas, tamaño_celda) = inicializar_matriz_por_dificultad(
+        dificultad,
+        dic_valores_dif,
+        buscaminas_width,
+        cubierto_constante
+    )
+
+    tamaño_celda = int(buscaminas_width // columnas)
+
+    imagen_mina = pygame.transform.scale(
+        pygame.image.load("assets/images/imagen_mina.png"),
+        (tamaño_celda, tamaño_celda)
+    )
+
+    imagen_bandera = pygame.transform.scale(
+        pygame.image.load("assets/images/imagen_bandera.png"),
+        (tamaño_celda, tamaño_celda)
+    )
+
+    contador = crear_contador(ventana, dic_contador, minas)
+
+    return (
+        matriz_estado, matriz_juego, columnas, minas, tamaño_celda,
+        imagen_mina, imagen_bandera, contador
+    )
