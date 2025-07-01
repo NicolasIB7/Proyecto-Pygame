@@ -278,7 +278,8 @@ def extraer_informacion_dif(dificultad:str, diccionario:dict)->tuple:
 
 
 
-def inicializar_matriz_por_dificultad(dificultad:str, diccionario:dict, ancho_buscaminas:int, CUBIERTA) -> tuple:
+
+def inicializar_matriz_por_dificultad(dificultad: str, diccionario: dict, ancho_buscaminas: int, CUBIERTA) -> tuple:
     '''
     Inicializa matrices y parámetros de juego según la dificultad elegida
     dificultad(str): clave de dificultad (facil/normal/dificil)
@@ -297,8 +298,19 @@ def inicializar_matriz_por_dificultad(dificultad:str, diccionario:dict, ancho_bu
             minas = config['minas']
             break
 
-    matriz_estado = [[CUBIERTA for _ in range(columnas)] for _ in range(columnas)]
-    matriz_juego = [[0 for _ in range(columnas)] for _ in range(columnas)]
+    matriz_estado = []
+    for _ in range(columnas):
+        fila = []
+        for _ in range(columnas):
+            fila.append(CUBIERTA)
+        matriz_estado.append(fila)
+
+    matriz_juego = []
+    for _ in range(columnas):
+        fila = []
+        for _ in range(columnas):
+            fila.append(0)
+        matriz_juego.append(fila)
 
     tamaño_celda = int(ancho_buscaminas // columnas)
 
@@ -307,7 +319,6 @@ def inicializar_matriz_por_dificultad(dificultad:str, diccionario:dict, ancho_bu
 
 
 def reiniciar_juego(ventana, minas, fuente, dic_contador, dic_timer, columnas, filas, color_timer_numeros, CUBIERTA):
-
     banderas_colocadas = 0
     contador = crear_contador(ventana, dic_contador, minas) 
     BUSCAMINAS_INICIADO = False
@@ -317,8 +328,19 @@ def reiniciar_juego(ventana, minas, fuente, dic_contador, dic_timer, columnas, f
     timer = crear_timer(ventana, dic_timer)  
     texto_timer = fuente.render("00:00", True, color_timer_numeros)
 
-    matriz_estado = [[CUBIERTA for _ in range(columnas)] for _ in range(filas)]
-    matriz_juego = [[0 for _ in range(columnas)] for _ in range(filas)]
+    matriz_estado = []
+    for _ in range(filas):
+        fila = []
+        for _ in range(columnas):
+            fila.append(CUBIERTA)
+        matriz_estado.append(fila)
+
+    matriz_juego = []
+    for _ in range(filas):
+        fila = []
+        for _ in range(columnas):
+            fila.append(0)
+        matriz_juego.append(fila)
 
     primera_jugada = True
     estado_derrota = False

@@ -7,6 +7,15 @@ from utils.functions_game_logic import *
 from utils.constants import *
 from utils.functions_game_menu import *
 
+RESOLUCIONES_DISPONIBLES = [
+    (800, 600),
+    (1024, 768),
+    (1280, 720),
+    (1366, 768),
+    (1600, 900),
+    (1920, 1080)
+]
+
 # Inicializar pygame
 pygame.init()
 ventana = pygame.display.set_mode((ANCHO, ALTO))
@@ -58,7 +67,6 @@ img_titulos = [
 timer_segundos = 0
 timer_minutos = 0
 
-
 buscaminas = crear_buscaminas(ventana, dic_buscaminas)
 
 botones = hacer_boton(ventana, dic_botones)
@@ -71,6 +79,7 @@ timer = crear_timer(ventana, dic_timer)
 pantalla_principal = True
 pantalla_juego = False
 pantalla_puntajes = False
+pantalla_opciones = False
 pantalla_dificultad = False
 BUSCAMINAS_INICIADO = False
 dificultad_elegida = None
@@ -91,13 +100,14 @@ ruta_archivo_puntajes = "top_10.csv"
 running = True
 
 while running:
+    # Pantalla Principal
     mouse_pos = pygame.mouse.get_pos()
     if pantalla_principal:
         mouse_pos = pygame.mouse.get_pos()
         opcion_seleccionada = obtener_opcion(rects_opciones, mouse_pos)
         ventana.blit(fondo, (0, 0))
         dibujar_menu(ventana, fondo, opciones, fuente, ANCHO,
-                     opcion_seleccionada, NEGRO, BLANCO, rects_opciones)
+                     opcion_seleccionada, BLANCO, NEGRO, rects_opciones)
 
         if not bandera_musica_fondo:
             pygame.mixer.music.play(-1)
@@ -119,6 +129,9 @@ while running:
                 elif opcion_seleccionada == 1:
                     pantalla_principal = False
                     pantalla_puntajes = True
+                elif opcion_seleccionada == 2:
+                    pantalla_principal = False
+                    pantalla_opciones = True
                 elif opcion_seleccionada == 3:
                     pygame.quit()
                     sys.exit()
@@ -127,7 +140,8 @@ while running:
         texto_musica = "MUSICA ON" if musica_activada else "MUSICA OFF"
         ventana.blit(fuente.render(
             texto_musica, True, BLANCO), rec_boton_musica)
-
+        
+    #Pantalla de Dificultad
     elif pantalla_dificultad:
 
         for evento in pygame.event.get():
@@ -305,14 +319,18 @@ while running:
 
                             elif evento.button == 3:
                                 if matriz_estado[fila][columna] == CUBIERTA:
-                                    matriz_estado[fila][columna] = BANDERA
-                                    banderas_colocadas += 1
-                                    contador = crear_contador(
+                                    if banderas_colocadas < MINAS:
+                                        matriz_estado[fila][columna] = BANDERA
+                                        banderas_colocadas += 1
+                                        contador = crear_contador(
                                         ventana, dic_contador, MINAS - banderas_colocadas)
+                                    else :
+                                        #Se puede poner sonido de limite alcanzado
+                                        pass
                                 elif matriz_estado[fila][columna] == BANDERA:
-                                    matriz_estado[fila][columna] = CUBIERTA
-                                    banderas_colocadas -= 1
-                                    contador = crear_contador(
+                                     matriz_estado[fila][columna] = CUBIERTA
+                                     banderas_colocadas -= 1
+                                     contador = crear_contador(
                                         ventana, dic_contador, MINAS - banderas_colocadas)
 
         # ventana.blit(fondo_pantall_juego, (0, 0))
@@ -377,7 +395,28 @@ while running:
             bandera_musica_fondo = False
             desactivar_sonido()
             pantalla_principal = True
+    
+    
+    
+    # Pantalla de Opciones
+    elif pantalla_opciones:
+        nueva_resolucion, volver = pantalla_opciones_resolucion(
+            ventana, fuente, RESOLUCIONES_DISPONIBLES, (ANCHO, ALTO)
+        )
 
+        if nueva_resolucion:
+            ANCHO, ALTO = nueva_resolucion
+            ventana = pygame.display.set_mode((ANCHO, ALTO))
+            fondo = pygame.transform.scale(
+                pygame.image.load("assets/images/fondofinal.png"), (ANCHO, ALTO))
+            fondo_pantall_juego = pygame.transform.scale(
+                pygame.image.load('assets/images/fondo_pantalla_juego.jpg'), (ANCHO, ALTO))
+
+        if nueva_resolucion or volver:
+            pantalla_opciones = False
+            pantalla_principal = True
+    
+    
     pygame.display.flip()
 
 pygame.quit()

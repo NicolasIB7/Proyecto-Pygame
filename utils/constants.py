@@ -3,8 +3,8 @@ import pygame
 from utils.functions_game_menu import *
 
 # Dimensiones
-ANCHO=1200
-ALTO = 600
+ANCHO=800
+ALTO =600
 
 # Colores
 NEGRO = (0, 0, 0)
