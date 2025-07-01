@@ -417,6 +417,8 @@ while running:
                 pygame.image.load("assets/images/fondofinal.png"), (ANCHO, ALTO))
             fondo_pantall_juego = pygame.transform.scale(
                 pygame.image.load('assets/images/fondo_pantalla_juego.jpg'), (ANCHO, ALTO))
+            pantalla_dificultad = pygame.transform.scale(
+                pygame.image.load('assets/images/fondo_pantalla_dificultad.jpg'), (ANCHO, ALTO))
             botones = hacer_boton(ventana, dic_botones)
             hover_botones = crear_hover_botones(ventana, dic_botones, imagenes_hover)
             botones_dif = hacer_boton(ventana, dic_botones_dif)
