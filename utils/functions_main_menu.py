@@ -2,13 +2,18 @@ import pygame
 from utils.constants import *
 
 def dibujar_menu(ventana, fondo, opciones, fuente, ancho_ventana, opcion_seleccionada, color_normal, color_seleccionado, lista_rects):
+    """
+    Dibuja el menú principal con todas las opciones en la ventana.
+    Recibe la superficie de la ventana, el fondo, una lista de opciones de texto, la fuente a usar, 
+    el ancho de la ventana, la opción actualmente seleccionada, los colores para resaltar o no el texto,
+    y una lista para guardar los rectángulos generados de cada texto.
+    No retorna nada, simplemente dibuja en pantalla y actualiza lista_rects.
+    """
     lista_rects.clear()
 
-    espacio = 50  # Separacion entre opciones
+    espacio = 50
     cantidad_opciones = len(opciones)
     altura_total = cantidad_opciones * espacio
-
-    # Se baja el menu 120 pixeles por sobre el eje vertical
     y_inicial = (ventana.get_height() - altura_total) // 2 + 120
 
     indice = 0
@@ -23,7 +28,7 @@ def dibujar_menu(ventana, fondo, opciones, fuente, ancho_ventana, opcion_selecci
         rect_texto.centerx = ventana.get_width() // 2
         rect_texto.y = y_inicial + indice * espacio
 
-        # Mostrar sombra solo si el texto es blanco , la variable se llama : (color_normal)
+        # sombra cuando el texto es blanco
         if color == BLANCO:
             sombra = fuente.render(texto.upper(), True, (0, 0, 0))
             rect_sombra = sombra.get_rect()
@@ -36,12 +41,12 @@ def dibujar_menu(ventana, fondo, opciones, fuente, ancho_ventana, opcion_selecci
         indice += 1
 
 
-
 def obtener_opcion(rects_opciones, mouse_pos):
-    '''
-    Devuelve el índice de la opcion en el cual el rectangulo obtiene la posición del mouse.
-    Si no hay colision, devuelve None.
-    '''
+    """
+    Devuelve el índice de la opción sobre la que el usuario hace clic.
+    Recibe la lista de rectángulos de las opciones y la posición actual del mouse.
+    Si no hay colisión, retorna None.
+    """
     i = 0
     for rect in rects_opciones:
         if rect.collidepoint(mouse_pos):
@@ -51,6 +56,11 @@ def obtener_opcion(rects_opciones, mouse_pos):
 
 
 def pantalla_opciones_resolucion(ventana, fuente, resoluciones, resolucion_actual):
+    """
+    Muestra la pantalla de selección de resolución.
+    Recibe la ventana, la fuente a usar, la lista de resoluciones disponibles y la resolución actual.
+    Retorna la resolución elegida como tupla (ancho, alto), y un booleano para indicar si se presionó Volver.
+    """
     clock = pygame.time.Clock()
     seleccion = None
     volver = False
@@ -71,7 +81,6 @@ def pantalla_opciones_resolucion(ventana, fuente, resoluciones, resolucion_actua
             botones.append((rect, resolucion))
             y += 60
 
-        # Botón Volver
         texto_volver = fuente.render("Volver", True, (0, 0, 0))
         rect_volver = texto_volver.get_rect(center=(ventana.get_width()//2, y + 40))
         pygame.draw.rect(ventana, (255, 0, 0), rect_volver.inflate(20, 10))
@@ -97,6 +106,13 @@ def pantalla_opciones_resolucion(ventana, fuente, resoluciones, resolucion_actua
 
     return seleccion, volver
 
+
 def blit_centrado(ventana, imagen):
+    """
+    Dibuja una imagen centrada en la ventana.
+    Recibe la superficie de la ventana y la imagen a centrar.
+    No retorna nada, simplemente la dibuja en el centro.
+    """
     rect = imagen.get_rect(center=(ventana.get_width() // 2, ventana.get_height() // 2))
     ventana.blit(imagen, rect)
+

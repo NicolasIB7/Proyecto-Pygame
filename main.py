@@ -44,7 +44,6 @@ botones_dif = hacer_boton(ventana, dic_botones_dif)
 botones_dif_hover = crear_hover_botones(
     ventana, dic_botones_dif, img_dif_hover)
 
-ruta_fondo_dif = 'assets/images/fondo_pantalla_dificultad.jpg'
 
 img_titulos = [
     {'titulo': 'assets/images/titulo_pantalla_dificultad.png',
@@ -62,13 +61,13 @@ img_titulos = [
 timer_segundos = 0
 timer_minutos = 0
 
-buscaminas = crear_buscaminas(ventana, dic_buscaminas)
-
+#elementos pantalla del juego
 botones = hacer_boton(ventana, dic_botones)
 hover_botones = crear_hover_botones(ventana, dic_botones, imagenes_hover)
 
 timer = crear_timer(ventana, dic_timer)
 
+buscaminas = crear_buscaminas(ventana, dic_buscaminas, timer[1].width + timer[1].x)
 
 # Juego
 pantalla_principal = True
@@ -95,13 +94,11 @@ ruta_archivo_puntajes = "top_10.csv"
 running = True
 
 while running:
-    # Pantalla Principal
     mouse_pos = pygame.mouse.get_pos()
-    # Botón silenciar música
     ancho_boton_musica = int(ANCHO * 0.15)
     alto_boton_musica = int(ALTO * 0.06)
     rec_boton_musica = pygame.Rect(
-    ANCHO - ancho_boton_musica - 10, 10, ancho_boton_musica, alto_boton_musica)
+    ANCHO - ancho_boton_musica - 35, 10, ancho_boton_musica, alto_boton_musica)
     if pantalla_principal:
         mouse_pos = pygame.mouse.get_pos()
         opcion_seleccionada = obtener_opcion(rects_opciones, mouse_pos)
@@ -142,7 +139,10 @@ while running:
         tamaño_fuente_musica = max(12, int(ALTO * 0.03))
         fuente_musica = pygame.font.Font("assets/fonts/fuentemario.ttf", tamaño_fuente_musica)
         pygame.draw.rect(ventana, (0, 0, 0), rec_boton_musica, width=3)
-        texto_musica = "MUSICA ON" if musica_activada else "MUSICA OFF"
+        if musica_activada:
+            texto_musica = "MUSICA ON"
+        else:
+            texto_musica = "MUSICA OFF"
         texto_render = fuente.render(texto_musica, True, BLANCO)
         texto_rect = texto_render.get_rect(center=rec_boton_musica.center)
         ventana.blit(texto_render, texto_rect)
@@ -163,7 +163,7 @@ while running:
                         matriz_estado, matriz_juego, columnas, minas, tamaño_celda,
                         imagen_mina, imagen_bandera, contador
                     ) = procesar_dificultad(
-                        dificultad_elegida, dic_valores_dif, buscaminas[0].width, CUBIERTA,
+                        dificultad_elegida, dic_valores_dif, buscaminas[1].get_width(), CUBIERTA,
                         ventana, dic_contador
                     )
                     MINAS = minas
@@ -176,7 +176,7 @@ while running:
                         matriz_estado, matriz_juego, columnas, minas, tamaño_celda,
                         imagen_mina, imagen_bandera, contador
                     ) = procesar_dificultad(
-                        dificultad_elegida, dic_valores_dif, buscaminas[0].width, CUBIERTA,
+                        dificultad_elegida, dic_valores_dif, buscaminas[1].get_width(), CUBIERTA,
                         ventana, dic_contador
                     )
                     MINAS = minas
@@ -190,7 +190,7 @@ while running:
                         matriz_estado, matriz_juego, columnas, minas, tamaño_celda,
                         imagen_mina, imagen_bandera, contador
                     ) = procesar_dificultad(
-                        dificultad_elegida, dic_valores_dif, buscaminas[0].width, CUBIERTA,
+                        dificultad_elegida, dic_valores_dif, buscaminas[1].get_width(), CUBIERTA,
                         ventana, dic_contador
                     )
                     MINAS = minas
@@ -276,14 +276,14 @@ while running:
                                     if primera_jugada:
                                         while True:
                                             matriz_juego = generar_matriz(
-                                                columnas, columnas, MINAS, (fila, columna))
+                                                columnas, columnas, MINAS, (fila, columna), MINA)
                                             if matriz_juego[fila][columna] == 0:
                                                 break
                                         primera_jugada = False
                                         BUSCAMINAS_INICIADO = True
 
                                     exploto = descubrir(
-                                        matriz_estado, matriz_juego, fila, columna)
+                                        matriz_estado, matriz_juego, fila, columna, (MINA, DESCUBIERTA, BANDERA))
                                     if exploto:
                                         BUSCAMINAS_INICIADO = False
                                         estado_derrota = True
@@ -315,11 +315,19 @@ while running:
                                             nombre_usuario = mostrar_pantalla_victoria(
                                                 ventana, puntaje_final, config_victoria)
                                             datos = leer_puntajes(
-                                                ruta_archivo_puntajes)
+                                                config_victoria["ruta_archivo"])
                                             datos_finales = validar_datos_archivo(
                                                 datos, nombre_usuario, puntaje_final)
                                             crear_sobreescribir_archivo(
-                                                datos_finales, ruta_archivo_puntajes)
+                                                datos_finales, config_victoria["ruta_archivo"])
+                                            (
+                                                banderas_colocadas, contador, BUSCAMINAS_INICIADO,
+                                                timer_segundos, timer_minutos, dic_timer, timer, texto_timer,
+                                                matriz_estado, matriz_juego, primera_jugada, estado_derrota, celda_explotada
+                                            ) = reiniciar_juego(
+                                                ventana, MINAS, fuente, dic_contador, dic_timer,
+                                                columnas, columnas, COLOR_TIMER_NUMEROS, CUBIERTA
+                                            )
                                             pantalla_juego = False
                                             pantalla_principal = True
 
@@ -339,7 +347,6 @@ while running:
                                      contador = crear_contador(
                                         ventana, dic_contador, MINAS - banderas_colocadas)
 
-        # ventana.blit(fondo_pantall_juego, (0, 0))
         ventana.blit(fondo_pantall_juego, (0, 0))
 
         dibujar_elementos_pantalla(
@@ -393,13 +400,14 @@ while running:
                                      (x, y, tamaño_celda, tamaño_celda), width=2)
 
     elif pantalla_puntajes == True:
+
         config_puntajes = obtener_config_puntajes(ventana, ANCHO, ALTO)
         volver_al_menu, bandera_musica_fondo = ejecutar_pantalla_puntajes(
-            ventana, config_puntajes, bandera_musica_fondo)
+    ventana, config_puntajes, bandera_musica_fondo, musica_activada
+)
+
         if volver_al_menu:
             pantalla_puntajes = False
-            bandera_musica_fondo = False
-            desactivar_sonido()
             pantalla_principal = True
     
     
@@ -423,13 +431,24 @@ while running:
             hover_botones = crear_hover_botones(ventana, dic_botones, imagenes_hover)
             botones_dif = hacer_boton(ventana, dic_botones_dif)
             botones_dif_hover = crear_hover_botones(ventana, dic_botones_dif, img_dif_hover)
-            buscaminas = crear_buscaminas(ventana, dic_buscaminas)
             timer = crear_timer(ventana, dic_timer)
-            contador = crear_contador(ventana, dic_contador, MINA - banderas_colocadas)
+            buscaminas = crear_buscaminas(ventana, dic_buscaminas, timer[1].width + timer[1].x)
+            contador = crear_contador(ventana, dic_contador, 0)
+            img_titulos = [
+                {'titulo': 'assets/images/titulo_pantalla_dificultad.png',
+                    'superficie': ventana, 'rect': 'pantalla'},
+                {'titulo': 'assets/images/titulo_boton_facil.png',
+                    'superficie': botones_dif[0]['rectangulo'], 'rect': 'boton'},
+                {'titulo': 'assets/images/titulo_boton_medio.png',
+                    'superficie': botones_dif[1]['rectangulo'], 'rect': 'boton'},
+                {'titulo': 'assets/images/titulo_boton_dificil.png',
+                    'superficie': botones_dif[2]['rectangulo'], 'rect': 'boton'}
+]
 
         if nueva_resolucion or volver:
             pantalla_opciones = False
             pantalla_principal = True
+            pantalla_dificultad = False
     
     
     pygame.display.flip()

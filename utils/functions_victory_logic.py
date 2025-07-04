@@ -1,216 +1,6 @@
 import pygame
 
 
-def obtener_config_puntajes(pantalla, ancho: int, alto: int) -> dict:
-    '''
-    Devuelve las variables y constantes necesarias para utilizar en funciones de renderizado.
-    Recibe la pantalla, el ancho y alto de nuestro juego.
-    Retorna un diccionario con las configuraciones.
-    '''
-    fuente_titulo = pygame.font.Font("assets/fonts/fuentemario.ttf", 30)
-    fuente_encabezado = pygame.font.Font("assets/fonts/fuentemario.ttf", 22)
-    fuente_puntajes = pygame.font.Font("assets/fonts/fuentemario.ttf", 20)
-    fuente_boton = pygame.font.Font("assets/fonts/fuentemario.ttf", 24)
-
-    return {
-        "pantalla": pantalla,
-        "ancho_pantalla": ancho,
-        "alto_pantalla": alto,
-        "fuente_puntajes": fuente_puntajes,
-        "fuente_titulo": fuente_titulo,
-        "fuente_encabezado": fuente_encabezado,
-        "fuente_boton": fuente_boton,
-        "margen_superior": alto * 0.06,
-        "margen_inferior": alto * 0.06,
-        "espaciado_renglon": alto * 0.012,
-        "inicio_tabla_y": alto * 0.18,
-        "color_texto": (50, 50, 50),
-        "color_fondo_normal": (250, 250, 255),
-        "color_primer_puesto": (255, 223, 100),
-        "color_segundo_puesto": (220, 220, 220),
-        "color_tercer_puesto": (240, 200, 150),
-        "color_encabezado": (180, 220, 255),
-        "color_boton_hover": (180, 180, 180),
-        "color_boton_normal": (230, 230, 230),
-        "color_pantalla_puntaje": (107, 140, 255),
-        "ruta_archivo":"top_10.csv"
-    }
-
-
-def ejecutar_pantalla_puntajes(ventana, config_puntajes, bandera_musica_fondo, musica_activada):
-    '''
-    Ejecuta y renderiza la pantalla de puntajes.
-    Recibe la ventana principal, la configuracion de variables de esa pantalla y la bandera para saber si el sonido está activo o no.
-    Retorna un booleano para saber si se vuelve al menu o no, y el contenido de la bandera del sonido.
-    '''
-    ventana.fill(config_puntajes["color_pantalla_puntaje"])
-    generar_texto_inicial(config_puntajes)
-    lista_puntajes = leer_puntajes(config_puntajes["ruta_archivo"])
-    generar_tabla_puntajes(lista_puntajes, config_puntajes)
-    rect_boton_volver = generar_boton_volver(config_puntajes)
-
-    if not bandera_musica_fondo and musica_activada:
-        pygame.mixer.music.play(-1)
-        bandera_musica_fondo = True
-
-    for evento in pygame.event.get():
-        if evento.type == pygame.QUIT:
-            pygame.quit()
-            quit()
-
-        if evento.type == pygame.MOUSEBUTTONDOWN:
-            if rect_boton_volver.collidepoint(evento.pos):
-                if evento.button == 1:
-                    return True, bandera_musica_fondo  
-
-        if evento.type == pygame.KEYDOWN:
-            if evento.key == pygame.K_ESCAPE:
-                return True, bandera_musica_fondo  
-
-    return False, bandera_musica_fondo
-
-
-
-def generar_texto_inicial(config: dict) -> None:
-    """
-    Genera y renderiza el texto principal de la pantalla.
-    Recibe la config con datos importantes a utilizar para la generación.
-    No retorna nada.
-    """
-    fuente = config["fuente_titulo"]
-    ancho_pantalla = config["ancho_pantalla"]
-    color_texto = config["color_texto"]
-    pantalla = config["pantalla"]
-    margen_superior = config["margen_superior"]
-
-    texto_principal = fuente.render(
-        "TOP 10 MEJORES PUNTAJES", True, color_texto)
-    ancho_texto = texto_principal.get_width()
-
-    posicion_x = (ancho_pantalla - ancho_texto) / 2
-    posicion_y = margen_superior
-
-    pantalla.blit(texto_principal, (posicion_x, posicion_y))
-
-
-def generar_tabla_puntajes(lista: list, config: dict) -> None:
-    """
-    Genera una tabla dentro de la pantalla de puntajes para cada jugador.
-    Recibe la informacion o lista de jugadores a mostrar, pygame y un diccionario de variables que necesito para armar la interfaz de la tabla.
-    No retorna nada
-    """
-    fuente_puntajes = config["fuente_puntajes"]
-    fuente_encabezado = config["fuente_encabezado"]
-    ancho_pantalla = config["ancho_pantalla"]
-    alto_pantalla = config["alto_pantalla"]
-    pantalla = config["pantalla"]
-    inicio_tabla_y = config["inicio_tabla_y"]
-    color_texto = config["color_texto"]
-    color_fondo_normal = config["color_fondo_normal"]
-    color_encabezado = config["color_encabezado"]
-    color_primer_puesto = config["color_primer_puesto"]
-    color_segundo_puesto = config["color_segundo_puesto"]
-    color_tercer_puesto = config["color_tercer_puesto"]
-
-    ancho_renglon = ancho_pantalla * 0.8
-    ubicacion_x = (ancho_pantalla - ancho_renglon) / 2
-
-    for i in range(len(lista)):
-        fuente = fuente_encabezado if i == 0 else fuente_puntajes
-
-        if i == 1:
-            color_fondo = color_primer_puesto
-        elif i == 2:
-            color_fondo = color_segundo_puesto
-        elif i == 3:
-            color_fondo = color_tercer_puesto
-        elif i % 2 == 0:
-            color_fondo = color_fondo_normal
-        else:
-            color_fondo = (255, 255, 255)
-
-        alto_texto = fuente.get_height()
-        alto_renglon = alto_texto + config["espaciado_renglon"]
-        ubicacion_y = inicio_tabla_y + (i * (alto_renglon + 5))
-
-        rect = pygame.Rect(ubicacion_x, ubicacion_y,
-                           ancho_renglon, alto_renglon)
-        pygame.draw.rect(pantalla, color_fondo, rect, border_radius=6)
-
-        texto_pos = "#" if i == 0 else str(i)
-        texto_posicion = fuente.render(texto_pos, True, color_texto)
-        texto_nombre = fuente.render(
-            lista[i][0].upper() if i == 0 else lista[i][0], True, color_texto)
-        texto_puntaje = fuente.render(
-            lista[i][1].upper() if i == 0 else str(lista[i][1]), True, color_texto)
-
-        pantalla.blit(texto_posicion, texto_posicion.get_rect(
-            midleft=(rect.x + 15, rect.centery)))
-        pantalla.blit(texto_nombre, texto_nombre.get_rect(
-            center=(rect.centerx, rect.centery)))
-        pantalla.blit(texto_puntaje, texto_puntaje.get_rect(
-            midright=(rect.right - 30, rect.centery)))
-
-
-def generar_boton_volver(config: dict) -> any:
-    """
-    Genera el boton para volver al menú principal con su respectivo texto centrado.
-    Recibe pygame y un diccionario de configuraciones que me sirven para generar el boton.
-    Retorna una surface de pygame.
-    """
-    mouse_pos = pygame.mouse.get_pos()
-
-    fuente = config["fuente_boton"]
-    ancho_pantalla = config["ancho_pantalla"]
-    alto_pantalla = config["alto_pantalla"]
-    color_texto = config["color_texto"]
-    pantalla = config["pantalla"]
-    margen_inferior = config["margen_inferior"]
-    color_hover = config["color_boton_hover"]
-    color_normal = config["color_boton_normal"]
-
-    texto_boton = fuente.render("Volver", True, color_texto)
-    ancho_texto = texto_boton.get_width()
-    alto_texto = texto_boton.get_height()
-
-    ancho_boton = ancho_texto + ancho_pantalla * 0.05
-    alto_boton = alto_texto + alto_pantalla * 0.03
-    pos_x = (ancho_pantalla - ancho_boton) / 2
-    pos_y = alto_pantalla - alto_boton - margen_inferior
-
-    rect_boton = pygame.Rect(pos_x, pos_y, ancho_boton, alto_boton)
-    color_boton = color_hover if rect_boton.collidepoint(
-        mouse_pos) else color_normal
-
-    pygame.draw.rect(pantalla, color_boton, rect_boton, border_radius=10)
-    pantalla.blit(texto_boton, texto_boton.get_rect(center=rect_boton.center))
-
-    return rect_boton
-
-
-def activar_sonido() -> None:
-    '''
-    Activa sonido del juego.
-    No recibe nada como parametro.
-    Retorna None
-    '''
-    pygame.mixer.music.play(-1)
-    return True
-    
-def desactivar_sonido() -> None:
-    '''    
-    Desactiva sonido del juego.
-    No recibe nada como parametro.
-    Retorna None
-    
-    '''
-    pygame.mixer.music.stop()
-    return True
-
-
-#########LOGICA DE VICTORIA###########
-
-
 def definir_penalidad(dificultad: str) -> int:
     '''
     Esta función define el factor a utilizar en el cálculo de puntaje dependiendo la dificultad.
@@ -220,11 +10,11 @@ def definir_penalidad(dificultad: str) -> int:
     dificultad = dificultad.lower()
 
     if dificultad == "facil":
-        dificultad_factor = 20000
-    elif dificultad == "normal":
-        dificultad_factor = 40000
+        dificultad_factor = 2000
+    elif dificultad == "medio":
+        dificultad_factor = 4000
     elif dificultad == "dificil":
-        dificultad_factor = 60000
+        dificultad_factor = 6000
     return dificultad_factor
 
 
@@ -333,7 +123,6 @@ def obtener_config_cuadro_victoria(pantalla, ancho: int, alto: int) -> dict:
         "color_texto": (50, 50, 50),
         "color_fondo_normal": (250, 250, 255),
         "color_pantalla_puntaje": (107, 140, 255),
-        "ruta_archivo":"top_10.csv"
 
     }
 
@@ -456,3 +245,4 @@ def mostrar_pantalla_victoria(ventana, puntaje, config):
 
     nombre = ejecutar_cuadro_victoria(ventana, rect_cuadro, puntaje, config)
     return nombre
+

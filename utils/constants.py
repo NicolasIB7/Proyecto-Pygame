@@ -3,8 +3,8 @@ import pygame
 from utils.functions_game_menu import *
 
 # Dimensiones
-ANCHO=1280
-ALTO =720
+ANCHO= 800
+ALTO = 600
 
 # Colores
 NEGRO = (0, 0, 0)
@@ -17,6 +17,11 @@ COLOR_TIMER_NUMEROS = (255, 0, 0)
 COLOR_FONDO = (34, 139, 27)
 COLOR_RECTANGULOS = (0, 0, 0)
 COLOR_DESCUBIERTA = (192, 192, 192)
+
+MINA = -1
+CUBIERTA = 0
+DESCUBIERTA = 1
+BANDERA = 2
 
 
 colores_numeros = {
@@ -35,10 +40,12 @@ fondo_pantall_juego = pygame.image.load(
 fondo_pantall_juego = pygame.transform.scale(
     fondo_pantall_juego, (ANCHO, ALTO))
 
+ruta_fondo_dif = 'assets/images/fondo_pantalla_dificultad.jpg'
+
 
 # diccionarios de los elementos
 
-dic_buscaminas = [{'dimension': 0.95, 'x': 0.55, 'y': 0.05}]
+dic_buscaminas = [{'dimension': 0.95, 'x': 0.03}]
 
 dic_botones = [
     {'ancho': 0.19, 'alto': 0.14, 'x': 0.06, 'y': 0.80,
